@@ -27,7 +27,8 @@ dev = [
     "radon (>=6.0.1,<7.0.0)",
     "pre-commit (>=4.7.0,<5.0.0)",
     "pytest (>=9.2.0,<10.0.0)",
-    "pytest-django (>=4.14.0,<5.0.0)"
+    "pytest-django (>=4.14.0,<5.0.0)",
+    "django-stubs[compatible-mypy] (>=6.1.2,<7.0.0)"
 ]
 
 
@@ -65,3 +66,9 @@ warn_unused_configs = true
 check_untyped_defs = true
 disallow_incomplete_defs = true
 no_implicit_optional = true
+plugins = ["mypy_django_plugin.main"]
+mypy_path = "src"
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+strict_settings = false

@@ -1,0 +1,91 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  quality-and-tests:
+    name: Code Quality and Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+
+        env:
+          POSTGRES_DB: hotel_booking_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd "pg_isready -U postgres -d hotel_booking_ci"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DJANGO_SECRET_KEY: "ci-only-django-test-secret-key"
+      DJANGO_DEBUG: "False"
+      DJANGO_ALLOWED_HOSTS: "testserver,localhost,127.0.0.1"
+
+      POSTGRES_DB: hotel_booking_ci
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: 5432
+
+      PYTHONPATH: src
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Install Poetry
+        run: pipx install poetry==2.5.1
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.14"
+          cache: poetry
+          cache-dependency-path: poetry.lock
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-root --no-interaction --no-ansi
+
+      - name: Ruff lint
+        run: make lint
+
+      - name: Ruff format check
+        run: make format-check
+
+      - name: Mypy type checking
+        run: make typecheck
+
+      - name: Bandit security analysis
+        run: make security
+
+      - name: Radon cyclomatic complexity
+        run: make radon-cc
+
+      - name: Radon maintainability index
+        run: make radon-mi
+
+      - name: Django system check
+        run: poetry run python src/manage.py check
+
+      - name: Run unit and integration tests
+        run: poetry run pytest -v
