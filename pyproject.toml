@@ -9,10 +9,10 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "django (>=5.2.8,<5.3)",
-    "python-dotenv (>=1.2.4,<2.0.0)",
     "djangorestframework (>=3.18.3,<4.0.0)",
     "psycopg[binary] (>=3.3.8,<4.0.0)",
-    "gunicorn (>=26.2.0,<27.0.0)"
+    "gunicorn (>=26.2.0,<27.0.0)",
+    "pydantic-settings (>=2.16.2,<3.0.0)"
 ]
 
 
@@ -67,9 +67,19 @@ warn_unused_configs = true
 check_untyped_defs = true
 disallow_incomplete_defs = true
 no_implicit_optional = true
-plugins = ["mypy_django_plugin.main"]
+plugins = [
+    "mypy_django_plugin.main",
+    "pydantic.mypy",
+]
 mypy_path = "src"
 
 [tool.django-stubs]
 django_settings_module = "config.settings"
 strict_settings = false
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+django_find_project = false
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"
